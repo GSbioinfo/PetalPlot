@@ -1,0 +1,6 @@
+l1	clone1	a1	a2	-1	-5	red	0
+l2	clone1	a2	a3	-5	-1	red	0
+l3	clone1	a3	a1	-1	-1	red	0
+l4	clone2	a1	a2	-2	-3	green	1
+l5	clone2	a2	a3	-3	-3	green	1
+l6	clone2	a3	a1	-3	-2	green	1

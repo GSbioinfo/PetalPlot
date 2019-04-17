@@ -1,0 +1,6 @@
+a1	Spleen	clone1	-1	red	1
+a1	Spleen	clone2	-2	green	0
+a2	BM	clone1	-5	red	1
+a2	BM	clone2	-3	green	0
+a3	TY	clone1	-1	red	1
+a3	TY	clone2	-3	green	0
