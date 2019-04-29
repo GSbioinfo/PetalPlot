@@ -78,10 +78,12 @@ $im->filledArc($x,$y,20,20,0,360,$blue);
 }
 
 sub write_img{
-my $im =shift;
+my @im_wite = @_;
+my $ofile=$im_wite[0];
+my $im=$im_wite[1];
 #open my $out, '>', 'stack.png' or die;
 #open my $out, '>', 'stack.jpeg' or die;
-open my $out, '>', 'test_ribbon.svg' or die;
+open my $out, '>', $ofile or die;#'CD3_ribbon.svg' or die;
 binmode $out;
 #print $out $im->png();
 #print $out $im->jpeg(95);

@@ -14,8 +14,10 @@ use GD::Simple;
 use GD::SVG;
 use POSIX;
 use mycolors;
-
-my $filename = 'mytest_stat_data.txt';
+use Color::Rgb;
+my ($infile, $outfile) = @ARGV;
+my $rgb = new Color::Rgb(rgb_txt=>'rgb.txt');
+my $filename = $infile;#'CD3_data.txt';
 open(my $fh, '<:encoding(UTF-8)', $filename)
   or die "Could not open file '$filename' $!";
 
@@ -43,7 +45,10 @@ while (my $row = <$fh>) {
   push @allvalues,($rowarray[2],$rowarray[3]);
   push @temp_axis_names, $rowarray[1];
   push @{$point_data{$rowarray[0]}{$rowarray[1]}}, @rowarray[2..3];
-  @{$clone_color_code{$rowarray[0]}}=mycolors::findcolor($rowarray[4]);
+  #@{$clone_color_code{$rowarray[0]}}=mycolors::findcolor($rowarray[4]);
+  my @rghx = map $_ , unpack 'C*', pack 'H*', $rowarray[4];
+  @{$clone_color_code{$rowarray[0]}}=$rgb->hex2rgb($rowarray[4]);
+  print Dumper @rghx;
   #$point_data{$rowarray[0]}{$rowarray[1]}= \@rowarray;
   
 }
@@ -152,7 +157,150 @@ for my $clonkey (keys %clone_stack_cord){
   my %temclone = %{$clone_stack_cord{$clonkey}};
   #print Dumper \%temclone;
   my @all_ax = sort(keys %temclone);
-  
+   if (@all_ax == 1){
+    #continue;
+  }
+  if (@all_ax == 2){
+    my ($ax1, $ax2)= @all_ax;
+    my @ax1vari = @{$temclone{$ax1}};
+    my @ax2vari = @{$temclone{$ax2}};
+    my ($bs1x1,$bs1y1,$bs1x2,$bs1y2);
+    my ($bs2x1,$bs2y1,$bs2x2,$bs2y2);
+    my ($c1x,$b1x,$c2x,$b2x);
+    if (($ax1 eq "a1") && ($ax2 ne "a2")){
+            # @points = ($x1c1,$y1b1,$x1,$y1,$x1c2,$y1b2,$x2c2,$y2b2,$x2,$y2,$x2c1,$y2b1)
+      #               0    1     2  3    4     5     6     7    8   9   10    11 
+       ($c1x,$b1x,$c2x,$b2x) = ($ax1vari[0]-$ax1vari[2],$ax1vari[1]-$ax1vari[3],$ax1vari[4]-$ax1vari[2],$ax1vari[5]-$ax1vari[3]);
+       
+        my %tem1=('axis' => $ax1,
+                  'im_size'=> [@defaul_im_size],
+                  'cords'=> [$ax1vari[2],$ax1vari[3],$ax1vari[8],$ax1vari[9]],
+                  'bcs' => [-$c1x,-$b1x,-$c2x,-$b2x],
+                  'theta'=> $axs_ang{$ax1}[1],
+                  'factor' => -1,
+                  'width' => $stck_width/2,
+                  'steps' => $angle_steps,
+                  'tranthe' => $axs_ang{$ax1}[1],#-$shif_angle,
+                  'shiftangele'=> $shif_angle);
+        #($bs1x1,$bs1y1,$bs1x2,$bs1y2)
+        my %bezhash1=xytoradial::get_rib_corda3a1(%tem1);
+        
+        ($c1x,$b1x,$c2x,$b2x) = ($ax2vari[0]-$ax2vari[2],$ax2vari[1]-$ax2vari[3],$ax2vari[4]-$ax2vari[2],$ax2vari[5]-$ax2vari[3]);
+        my %tem2=('axis' => $ax2,
+                  'im_size'=> [@defaul_im_size],
+                  'cords'=> [$ax2vari[2],$ax2vari[3],$ax2vari[8],$ax2vari[9]],
+                  'bcs' => [$c1x,$b1x,$c2x,$b2x],
+                  'theta'=> $axs_ang{$ax2}[1],
+                  'factor' => 1,
+                  'width' => $stck_width/2,
+                  'steps' => $angle_steps,
+                  'tranthe' => $axs_ang{$ax2}[1],#+$shif_angle,
+                  'shiftangele'=> $shif_angle);
+        #($bs2x1,$bs2y1,$bs2x2,$bs2y2)
+        my %bezhash2=xytoradial::get_rib_corda3a1(%tem2);
+        my @points1;
+        my @bez_input1=($ax1vari[4],$ax1vari[5]);
+        push @bez_input1,@{$bezhash1{'x1y1'}};
+        push @bez_input1,@{$bezhash2{'x1y1'}};
+        push @bez_input1,($ax2vari[0],$ax2vari[1]);
+        #my $bezier1 = Math::Bezier->new($ax1vari[4],$ax1vari[5],$bs1x1,$bs1y1,$bs2x1,$bs2y1,$ax2vari[0],$ax2vari[1]);
+        my $bezier1 = Math::Bezier->new(@bez_input1);
+        push @points1, ($ax1vari[4],$ax1vari[5]);
+        push @points1, $bezier1->curve($no_curve_pt);
+        push @points1, ($ax2vari[0],$ax2vari[1]);
+        my @bezier_points;
+        while (@points1) {
+            push @bezier_points, [ splice( @points1, 0, 2 ) ];
+        }
+        #push @{$clone_ribion{$clonkey}{'rib1'}}, @points1;
+        push @bezier_points, [$ax2vari[10],$ax2vari[11]];
+        my @points2;
+        my @bez_input2=($ax2vari[10],$ax2vari[11]);
+        push @bez_input2,@{$bezhash2{'x2y2'}};
+        push @bez_input2,@{$bezhash1{'x2y2'}};
+        push @bez_input2,($ax1vari[6],$ax1vari[7]);
+        #my $bezier2 = Math::Bezier->new($ax2vari[10],$ax2vari[11],$bs2x2,$bs2y2,$bs1x2,$bs1y2,$ax1vari[6],$ax1vari[7]);
+        my $bezier2 = Math::Bezier->new(@bez_input2);
+        push @points2, ($ax2vari[10],$ax2vari[11]);
+        @points2=$bezier2->curve($no_curve_pt);
+        push @points2, ($ax1vari[6],$ax1vari[7]);
+        my @bezier2_points2;
+        while (@points2) {
+            push @bezier_points, [ splice( @points2, 0, 2 ) ];
+        }
+        push @{$clone_ribion{$clonkey}{'rib1'}}, @bezier_points;
+        #push @{$clone_ribion{$clonkey}{'rib1'}},( @points1,@points2);
+        #print "$ax1\t$tem1{'theta'}[1]\t$ax2\t$tem2{'theta'}[1]\n";
+    }else{
+      # @points = ($x1c1,$y1b1,$x1,$y1,$x1c2,$y1b2,$x2c2,$y2b2,$x2,$y2,$x2c1,$y2b1)
+      #               0    1     2  3    4     5     6     7    8   9   10    11 
+       ($c1x,$b1x,$c2x,$b2x) = ($ax1vari[0]-$ax1vari[2],$ax1vari[1]-$ax1vari[3],$ax1vari[4]-$ax1vari[2],$ax1vari[5]-$ax1vari[3]);
+        my %tem1=('axis' => $ax1,
+                  'im_size'=> [@defaul_im_size],
+                  'cords'=> [$ax1vari[2],$ax1vari[3],$ax1vari[8],$ax1vari[9]],
+                  'bcs' => [$c1x,$b1x,$c2x,$b2x],
+                  'theta'=> $axs_ang{$ax1}[1],
+                  'factor' => 1,
+                  'width' => $stck_width/2,
+                  'steps' => $angle_steps,
+                  'tranthe' => $axs_ang{$ax1}[1],#+$shif_angle,
+                  'shiftangele'=> $shif_angle);
+        
+        #($bs1x1,$bs1y1,$bs1x2,$bs1y2)=xytoradial::get_rib_cord(%tem1);
+        my %bezhash1=xytoradial::get_rib_cord(%tem1);
+        ($c1x,$b1x,$c2x,$b2x) = ($ax2vari[0]-$ax2vari[2],$ax2vari[1]-$ax2vari[3],$ax2vari[4]-$ax2vari[2],$ax2vari[5]-$ax2vari[3]);
+        my %tem2=('axis' => $ax2,
+                  'im_size'=> [@defaul_im_size],
+                  'cords'=> [$ax2vari[2],$ax2vari[3],$ax2vari[8],$ax2vari[9]],
+                  'bcs' => [-$c1x,-$b1x,-$c2x,-$b2x],
+                  'theta'=> $axs_ang{$ax2}[1],
+                  'factor' => -1,
+                  'width' => $stck_width/2,
+                  'steps' => $angle_steps,
+                  'tranthe' => $axs_ang{$ax2}[1],#-$shif_angle,
+                  'shiftangele'=> $shif_angle);
+        
+        #($bs2x1,$bs2y1,$bs2x2,$bs2y2)=xytoradial::get_rib_cord(%tem2);
+        my %bezhash2=xytoradial::get_rib_cord(%tem2);
+        my @points1;
+        my @bez_input1=($ax1vari[0],$ax1vari[1]);
+        push @bez_input1,@{$bezhash1{'x1y1'}};
+        push @bez_input1,@{$bezhash2{'x1y1'}};
+        push @bez_input1,($ax2vari[4],$ax2vari[5]);
+        
+        my $bezier1 = Math::Bezier->new(@bez_input1);
+        #my $bezier1 = Math::Bezier->new($ax1vari[0],$ax1vari[1],$bs1x1,$bs1y1,$bs2x1,$bs2y1,$ax2vari[4],$ax2vari[5]);
+        push @points1, ($ax1vari[0],$ax1vari[1]);
+        push @points1, $bezier1->curve($no_curve_pt);
+        push @points1, ($ax2vari[4],$ax2vari[5]);
+        my @bezier_points;
+        while (@points1) {
+            push @bezier_points, [ splice( @points1, 0, 2 ) ];
+        }
+        #push @{$clone_ribion{$clonkey}{'rib1'}}, @points1;
+        push @bezier_points, [$ax2vari[6],$ax2vari[7]];
+        my @points2;
+        my @bez_input2=($ax2vari[6],$ax2vari[7]);
+        push @bez_input2,@{$bezhash2{'x2y2'}};
+        push @bez_input2,@{$bezhash1{'x2y2'}};
+        push @bez_input2,($ax1vari[10],$ax1vari[11]);
+        
+        my $bezier2 = Math::Bezier->new(@bez_input2);
+        #my $bezier2 = Math::Bezier->new($ax2vari[6],$ax2vari[7],$bs2x2,$bs2y2,$bs1x2,$bs1y2,$ax1vari[10],$ax1vari[11]);
+        
+        push @points2, ($ax2vari[6],$ax2vari[7]);
+        @points2=$bezier2->curve($no_curve_pt);
+        push @points2, ($ax1vari[10],$ax1vari[11]);
+        my @bezier2_points2;
+        while (@points2) {
+            push @bezier_points, [ splice( @points2, 0, 2 ) ];
+        }
+        push @{$clone_ribion{$clonkey}{'rib1'}}, @bezier_points;
+        #push @{$clone_ribion{$clonkey}{'rib1'}},( @points1,@points2);
+        #print "$ax1\t$tem1{'theta'}[1]\t$ax2\t$tem2{'theta'}[1]\n";
+    }
+  }
+
 
   if (@all_ax == 3){
     my %axishash=('a1a2'=> ['a1','a2'],
@@ -361,7 +509,8 @@ $img->filledPolygon($poly,$bl);
 }
 }
 #drawimage::circ_out(($defaul_im_size[0],$defaul_im_size[1],$inner_cir,$outer_cir,$img));
-drawimage::write_img($img);
+my @img_write= ($outfile,$img);
+drawimage::write_img(@img_write);
 =code
 ##--------------------------------------
   if (@all_ax == 1){
