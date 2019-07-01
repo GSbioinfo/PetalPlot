@@ -3,13 +3,13 @@ eval "use GD";
 use GD;
 use Math::Bezier;
 use strict;
-use Math::VecStat qw(min max);
+use Math::VecStat qw(min);
 use strict;
 use warnings;
 use Data::Dumper qw(Dumper);
 use List::MoreUtils qw(uniq minmax );
 use xytoradial;
-use drawimage;  
+use drawimage_png;  
 use GD::Simple;
 use GD::SVG;
 #use GD::Font;
@@ -26,8 +26,8 @@ if (@argume == 2){
 ($infile, $outfile) = @argume;
 }else{
   $infile=$argume[0];
-  $outfile= $infile =~ s/.txt/.svg/r;
-  #$outfile= $infile =~ s/.txt/.png/r;
+  #$outfile= $infile =~ s/.txt/.svg/r;
+  $outfile= $infile =~ s/.txt/.png/r;
 }
 my $rgb = new Color::Rgb(rgb_txt=>'rgb.txt');
 my $filename = $infile;#'CD3_data.txt';
@@ -94,9 +94,9 @@ my %axs_ang = xytoradial::get_axis_angles(%axis_names);
 
 #print "$axs_ang{'a1'}[0]\n";
 
-my $img=drawimage::createimage(@defaul_im_size);
+my $img=drawimage_png::createimage(@defaul_im_size);
 my $blue = $img->colorAllocate(0,0,255);
-drawimage::circ_out(($defaul_im_size[0],$defaul_im_size[1],$inner_cir,$outer_cir,$img));
+drawimage_png::circ_out(($defaul_im_size[0],$defaul_im_size[1],$inner_cir,$outer_cir,$img));
 
 #my $poly = new GD::Polygon;
 #$img->string(gdSmallFont,2,10,"Peachy Keen",$blue);
@@ -106,7 +106,7 @@ my %axis_col= ('a1'=>"black",#"yellow",
                 'a3'=>"black",);#"cyan");
 #print Dumper \%point_data;
 foreach my $outkey (keys %axs_ang) {
-  my ($x1,$y1,$x2,$y2)=drawimage::axisdraw(($defaul_im_size[0],$defaul_im_size[1],$outer_axis,$inner_axis,$axs_ang{$outkey}[1],$img));
+  my ($x1,$y1,$x2,$y2)=drawimage_png::axisdraw(($defaul_im_size[0],$defaul_im_size[1],$outer_axis,$inner_axis,$axs_ang{$outkey}[1],$img));
   my ($reg,$green,$blue)=mycolors::findcolor($axis_col{$outkey});
   my $alpha=0;
   my $bl = $img->colorAllocateAlpha($reg,$green,$blue,$alpha);
@@ -122,7 +122,7 @@ foreach my $outkey (keys %axs_ang) {
   
   my @xycord=xytoradial::get_xy_loc(%temhash);
   my $crs=$point_data{$outkey}{$innerkey}[3];
-  #drawimage::addPnt(($xycord[0],$xycord[1],$point_data{$outkey}{$innerkey}[2],$crs,$img));
+  #drawimage_png::addPnt(($xycord[0],$xycord[1],$point_data{$outkey}{$innerkey}[2],$crs,$img));
   #print Dumper \%temhash;
   }
 }
@@ -489,8 +489,8 @@ $poly->addPt($newploypt[0], $newploypt[1]);
 $img->filledPolygon($poly,$bl);
 }
 }
-#drawimage::circ_out(($defaul_im_size[0],$defaul_im_size[1],$inner_cir,$outer_cir,$img));
-#drawimage::write_img($img);
+#drawimage_png::circ_out(($defaul_im_size[0],$defaul_im_size[1],$inner_cir,$outer_cir,$img));
+#drawimage_png::write_img($img);
 
 for my $pkeys (keys %point_data2){
 my %tem=%{$point_data2{$pkeys}};
@@ -525,10 +525,10 @@ while (@points) {
 $img->filledPolygon($poly,$bl);
 }
 }
-#drawimage::circ_out(($defaul_im_size[0],$defaul_im_size[1],$inner_cir,$outer_cir,$img));
+#drawimage_png::circ_out(($defaul_im_size[0],$defaul_im_size[1],$inner_cir,$outer_cir,$img));
 
 my @img_write= ($outfile,$img);
-drawimage::write_img(@img_write);
+drawimage_png::write_img(@img_write);
 =code
 ##--------------------------------------
   if (@all_ax == 1){
@@ -703,7 +703,7 @@ for my $lkey (keys %line_hash){
     push @line_cord, ($tempx,$tempy);
     push @{$line_axis_xy{$lkey}{$tkey}},($defaul_im_size[0],$defaul_im_size[1],$tempx,$tempy,$nval,$axs_ang{$tkey}[1]); 
   }
-  my $bezier = Math::Bezier->new(drawimage::draw_curv_lines(%{$line_axis_xy{$lkey}}));
+  my $bezier = Math::Bezier->new(drawimage_png::draw_curv_lines(%{$line_axis_xy{$lkey}}));
   my @points= $bezier->curve(40);
   my @bezier_points;
   while (@points) {

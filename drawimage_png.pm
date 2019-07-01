@@ -1,4 +1,4 @@
-package drawimage;
+package drawimage_png;
 use GD::Image; 
 use GD::SVG;
 use Data::Dumper qw(Dumper);
@@ -7,8 +7,8 @@ use GD::Simple;
 sub createimage{
 my @def_size=@_;
 
-#my $im = GD::Image->new($def_size[0],$def_size[1]);
-my $im = GD::SVG::Image->new($def_size[0],$def_size[1]);
+my $im = GD::Image->new($def_size[0],$def_size[1]);
+#my $im = GD::SVG::Image->new($def_size[0],$def_size[1]);
 # allocate some colors
 my $white = $im->colorAllocate(255,255,255);
 my $black = $im->colorAllocate(0,0,0);       
@@ -49,7 +49,7 @@ my $gray = $im->colorAllocateAlpha(127,127,127,60);
 my @colset= ($black,$white);#,$black,$white,$black,$white);
 #,
 #                   gdTransparent,gdTransparent);
-
+$im ->setThickness(3);
 $im->setStyle($black,$white,gdTransparent,gdTransparent);
 #$im->setStyle($black,
 #                   gdTransparent,gdTransparent);                   
@@ -59,14 +59,8 @@ my $spce= ($ou-$in)/$num_ticks;
 for (my $ix=0; $ix <= $num_ticks; $ix++){
     my $hei=$in+($spce*$ix);
 #$im->arc($x/2,$y/2,$hei*2,$hei*2,0,360,gdStyled);
-#if($hei==$in || $hei==$ou){
-if($ix % 2 == 0){
-    $im ->setThickness(5);
-    $im->arc($x/2,$y/2,$hei*2,$hei*2,0,360,$black);  
-}else{
-    $im ->setThickness(3);
-    $im->arc($x/2,$y/2,$hei*2,$hei*2,0,360,$gray);
-}
+
+$im->arc($x/2,$y/2,$hei*2,$hei*2,0,360,$black);
 #$im->arc($x/2,$y/2,100,100,0,360,$gray);
 }
 }
@@ -90,13 +84,13 @@ sub write_img{
 my @im_wite = @_;
 my $ofile=$im_wite[0];
 my $im=$im_wite[1];
-#open my $out, '>', $ofile or die;
+open my $out, '>', $ofile or die;
 #open my $out, '>', 'stack.jpeg' or die;
-open my $out, '>', $ofile or die;#'CD3_ribbon.svg' or die;
-binmode $out;
-#print $out $im->png();
+#open my $out, '>', $ofile or die;#'CD3_ribbon.svg' or die;
+#binmode $out;
+print $out $im->png();
 #print $out $im->jpeg(95);
-print $out $im->svg();
+#print $out $im->svg();
 close $out;
 }
 

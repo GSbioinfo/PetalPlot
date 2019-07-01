@@ -529,7 +529,83 @@ $img->filledPolygon($poly,$bl);
 
 my @img_write= ($outfile,$img);
 drawimage::write_img(@img_write);
+#**********************************************************#
+#----------------------------------------------------------#
+#------Add ticks and tick values to the plots--------------#
+
+#my $file=$outfile;
+my @svgfile;
+open my $in, "<:encoding(utf8)", $outfile or die "$outfile: $!";
+my $iter=1;
+while (my $line = <$in>) {
+    push @svgfile,$line;
+     $iter=$iter+1;
+    
+}
+close $in;
+my @plotinfo = split /[\/]/, $infile;
+#print Dumper @plotinfo;
+my $infofile = $plotinfo[$#plotinfo] =~ s/.txt/.tsv/r;
+$infofile = "maxsum_".$infofile;
+$plotinfo[$#plotinfo]=$infofile;
+my $readinfo= join"/",@plotinfo;
+#print "$readinfo\n";
+#my @defaul_im_size=(1000,1000);
+#my $outer_cir= ($defaul_im_size[0]/2)-($defaul_im_size[0]/2)*0.1;#450; #radius of outer circle upper limit 
+#my $inner_cir=($defaul_im_size[0])*0.1;
+#print $outer_cir, $inner_cir;
+my $myx=50;
+my @myy;
+#----------Number of intervals-------------##
+my $num_ticks=10;
+#-------------------------------------------#
+my $spce= ($outer_cir-$inner_cir)/$num_ticks;
+for (my $ix=0; $ix <= $num_ticks; $ix++){
+    push @myy,$inner_cir+($spce*$ix);
+}
+#print Dumper @myy;
+open(my $fhinfo, '<:encoding(UTF-8)', $readinfo)
+  or die "Could not open file '$readinfo' $!";
+my %infohash;
+my @maxval;
+while (my $row = <$fhinfo>) {
+    chomp $row;
+    my @rowarray= split /\s+/,$row;
+    push @maxval,$rowarray[$#rowarray];
+}
+close $fhinfo;
+my @mymax = max(@maxval);
+#print Dumper $mymax[0];
+
+
+#my @svgkeys = sort(keys %svgfile);
+my $des=$outfile;
+open(DES,'>',$des) or die $!;
+foreach my $iter (0..2){
+    print  DES $svgfile[$iter];
+}
+my $tickint= $mymax[0]/$num_ticks;
+
+my $tickval=0;#$mymax[0];
+my $icont=0;
+foreach(@myy){
+    my $newy=($defaul_im_size[0]/2)-$_;
+    
+#print  DES qq{\t<line x1="50" x2="450" y1="$newy" y2="$newy" stroke="black" stroke-width= "2"/>\n};
+if($icont % 2 == 0 ){
+print  DES qq{\t<text x="5150" y="$newy" dy="-10" font-family="arial" font-size="450px" fill="black">$tickval</text>\n};  #font-weight="bold"
+}
+$tickval=$tickval+$tickint;
+$icont++;
+
+}
+foreach my $iter (3..$#svgfile){
+    print  DES $svgfile[$iter];
+}
+
+close $des;
 =code
+perl petal_plot_v3.pl
 ##--------------------------------------
   if (@all_ax == 1){
     continue;
