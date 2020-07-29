@@ -108,6 +108,7 @@ my %axis_col= ('a1'=>"black",#"yellow",
                 'a3'=>"black",);#"cyan");
 #print Dumper \%point_data;
 foreach my $outkey (keys %axs_ang) {
+  
   my ($x1,$y1,$x2,$y2)=drawimage::axisdraw(($defaul_im_size[0],$defaul_im_size[1],$outer_axis,$inner_axis,$axs_ang{$outkey}[1],$img));
   my ($reg,$green,$blue)=mycolors::findcolor($axis_col{$outkey});
   my $alpha=0;
@@ -130,6 +131,7 @@ foreach my $outkey (keys %axs_ang) {
 }
 my %clone_stack_cord;
 my $stck_width=($defaul_im_size[0])*0.04;#100;
+my $stck_widthBG=($defaul_im_size[0])*0.08;#100;
 my $no_curve_pt=100;
 my %point_data2 = %point_data;
 for my $pkeys (keys %point_data){
@@ -471,7 +473,7 @@ for my $clonkey (keys %clone_stack_cord){
 }
 #print Dumper \%clone_ribion;
 my $alpha=40;
-my $alphablack=0;
+my $alphablack=100;
 $img ->setThickness(0);
 for my $keyclo (keys %clone_ribion){
 my %xtemhash = %{$clone_ribion{$keyclo}};
@@ -485,7 +487,7 @@ foreach my $dcop (@xyz){
 my $bl = $img->colorAllocateAlpha(@{$clone_color_code{$keyclo}},$alpha);
 
 
- my $bl1 = $img->colorAllocateAlpha(@{$clone_color_code{$keyclo}},$alphablack); 
+my $bl1 = $img->colorAllocateAlpha(@{$clone_color_code{$keyclo}},$alphablack); 
 
 my $poly = new GD::Polygon;
 #print Dumper \@newtemarray;
@@ -500,8 +502,8 @@ my @newploypt = splice(@temsplic, 0,2);
 #print Dumper \@newploypt;
 $poly->addPt($newploypt[0], $newploypt[1]);
 }
-if ($keyclo eq 'BLACK'){
-  $img->filledPolygon($poly,$bl1);
+if ($keyclo eq 'BG_H1' | $keyclo eq 'BG_H5'){
+  #$img->filledPolygon($poly,$bl1);
 }else{
 $img->filledPolygon($poly,$bl);
 }
@@ -509,6 +511,44 @@ $img->filledPolygon($poly,$bl);
 }
 #drawimage::circ_out(($defaul_im_size[0],$defaul_im_size[1],$inner_cir,$outer_cir,$img));
 #drawimage::write_img($img);
+for my $pkeys (keys %point_data2){
+my %tem=%{$point_data2{$pkeys}};
+#print Dumper \%tem;
+for my $tmkey (keys %tem){
+my %temrecod;
+my @temval=@{$tem{$tmkey}};
+my $nval1=$inner_cir+($temval[0]-$minmax[0])/($minmax[1]-$minmax[0])*($outer_cir-$inner_cir);
+my $nval2=$inner_cir+($temval[1]-$minmax[0])/($minmax[1]-$minmax[0])*($outer_cir-$inner_cir);
+
+%temrecod=('im_size'=> [@defaul_im_size],
+            'value' => [$nval1,$nval2],
+            'theta' => $axs_ang{$tmkey}[1],
+            'width' => $stck_width/3
+);
+#print Dumper \%temrecod;
+my @points=(xytoradial::get_stack_cord(%temrecod));
+# @points = ($x1c1,$y1b1,$x1,$y1,$x1c2,$y1b2,$x2c2,$y2b2,$x2,$y2,$x2c1,$y2b1)
+#               0    1     2  3    4     5     6     7    8   9   10    11 
+push @{$clone_stack_cord{$pkeys}{$tmkey}}, @points;
+my @test;
+my $alpha=0;
+my $alphaBG=0;
+$img ->setThickness(1);
+my $bl = $img->colorAllocateAlpha(@{$clone_color_code{$pkeys}},$alpha);
+my $blBG = $img->colorAllocateAlpha(@{$clone_color_code{$pkeys}},$alphaBG);
+my $poly = new GD::Polygon;
+#my $poly = GD::SVG::Polygon->new;
+while (@points) {
+  my @newpnt= splice( @points, 0, 2 );
+  #print "($newpnt[0], $newpnt[1])\n";
+  $poly->addPt($newpnt[0], $newpnt[1]);
+}
+    if($pkeys eq 'BG_H1' | $pkeys eq 'BG_H5'){
+        $img->setThickness(40);
+        $img->polygon($poly,$blBG);
+    }
+}
+}
 
 for my $pkeys (keys %point_data2){
 my %tem=%{$point_data2{$pkeys}};
@@ -531,8 +571,10 @@ my @points=(xytoradial::get_stack_cord(%temrecod));
 push @{$clone_stack_cord{$pkeys}{$tmkey}}, @points;
 my @test;
 my $alpha=0;
+my $alphaBG=0;
 $img ->setThickness(1);
 my $bl = $img->colorAllocateAlpha(@{$clone_color_code{$pkeys}},$alpha);
+my $blBG = $img->colorAllocateAlpha(@{$clone_color_code{$pkeys}},$alphaBG);
 my $poly = new GD::Polygon;
 #my $poly = GD::SVG::Polygon->new;
 while (@points) {
@@ -540,7 +582,10 @@ while (@points) {
   #print "($newpnt[0], $newpnt[1])\n";
   $poly->addPt($newpnt[0], $newpnt[1]);
 }
-$img->filledPolygon($poly,$bl);
+    if($pkeys ne 'BG_H1' & $pkeys ne 'BG_H5'){
+        $img ->setThickness(1);
+    $img->filledPolygon($poly,$bl);
+    }
 }
 }
 #drawimage::circ_out(($defaul_im_size[0],$defaul_im_size[1],$inner_cir,$outer_cir,$img));
