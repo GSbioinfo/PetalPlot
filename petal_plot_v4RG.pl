@@ -638,7 +638,7 @@ while (my $row = <$fhinfo>) {
 }
 close $fhinfo;
 my @mymax = max(@maxval);
-#print Dumper $mymax[0];
+print Dumper $mymax[0];
 
 
 #my @svgkeys = sort(keys %svgfile);

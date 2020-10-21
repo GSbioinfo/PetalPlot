@@ -92,7 +92,7 @@ my %axs_ang = xytoradial::get_axis_angles(%axis_names);
 
 
 
-#print Dumper \@test;
+#print Dumper \%axs_ang;
 
 #print "$axs_ang{'a1'}[0]\n";
 
@@ -105,8 +105,9 @@ drawimage::circ_out(($defaul_im_size[0],$defaul_im_size[1],$inner_cir,$outer_cir
 #$img->openPolygon($poly,$colx);
 my %axis_col= ('a1'=>"black",#"yellow",
                 'a2'=>"black",
-                'a3'=>"black",);#"cyan");
-#print Dumper \%point_data;
+                'a3'=>"black");
+ #               'a4'=>"black");#"cyan");
+#print Dumper \%axis_col;
 foreach my $outkey (keys %axs_ang) {
   my ($x1,$y1,$x2,$y2)=drawimage::axisdraw(($defaul_im_size[0],$defaul_im_size[1],$outer_axis,$inner_axis,$axs_ang{$outkey}[1],$img));
   my ($reg,$green,$blue)=mycolors::findcolor($axis_col{$outkey});
@@ -593,7 +594,7 @@ while (my $row = <$fhinfo>) {
 }
 close $fhinfo;
 my @mymax = max(@maxval);
-#print Dumper $mymax[0];
+print Dumper $mymax[0];
 
 
 #my @svgkeys = sort(keys %svgfile);
@@ -604,7 +605,7 @@ foreach my $iter (0..2){
 }
 my $tickint= $mymax[0]/$num_ticks;
 
-my $tickval=0;#$mymax[0];
+my $tickval=$mymax[0];
 my $icont=0;
 foreach(@myy){
     my $newy=($defaul_im_size[0]/2)-$_;

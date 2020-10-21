@@ -1,5 +1,0 @@
-clone1	a1	0.0	0.5	red	0
-clone2	a1	0.5	1	green	1
-clone1	a2	0.0	0.2	red	0
-clone2	a2	0.2	1	green	1
-clone1	a3	0.0	0.75	red	0
